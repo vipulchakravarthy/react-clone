@@ -5,6 +5,33 @@ let globalParent;
 //to maintain the state instances
 const componentState = new Map();
 
+export function useMemo(callback, dependencies) {
+    const id = globalId;
+    const parent = globalParent;
+    globalId++;
+    return (() => {
+        const { cache } = componentState.get(parent);
+        if (cache[id] == null) {
+            cache[id] = { dependencies: undefined };
+        }
+
+        const dependenciesChanged = dependencies == null ||
+            dependencies.some((dependency, i) => {
+                return (
+                    cache[id].dependencies == null ||
+                    cache[id].dependencies[i] !== dependency
+                )
+            })
+
+        if (dependenciesChanged) {
+            cache[id].value = callback();
+            cache[id].dependencies = dependencies;
+        }
+        return cache[id].value;
+    })()
+}
+
+
 export function useEffect(callback, dependencies) {
     const id = globalId;
     const parent = globalParent;
